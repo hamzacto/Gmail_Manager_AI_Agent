@@ -52,8 +52,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: hamzaelmkadem24@gmail.com
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: hamzaelmokadem
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Create Backend Repository
         run: |
@@ -61,7 +61,7 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
           -d '{"name": "ai-email-agent-backend", "is_private": false}' \
-          https://hub.docker.com/v2/repositories/hamzaelmkadem24/
+          https://hub.docker.com/v2/repositories/hamzaelmokadem/
 
       - name: Build and Push Backend Image
         uses: docker/build-push-action@v4
@@ -70,9 +70,9 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            hamzaelmkadem24/ai-email-agent-backend:latest
-            hamzaelmkadem24/ai-email-agent-backend:${{ github.sha }}
-            ${{ github.event_name == 'release' && format('hamzaelmkadem24/ai-email-agent-backend:{0}', github.event.release.tag_name) || '' }}
+            hamzaelmokadem/ai-email-agent-backend:latest
+            hamzaelmokadem/ai-email-agent-backend:${{ github.sha }}
+            ${{ github.event_name == 'release' && format('hamzaelmokadem/ai-email-agent-backend:{0}', github.event.release.tag_name) || '' }}
 
   build_and_push_frontend:
     name: Build and Push Frontend Image
@@ -89,7 +89,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: hamzaelmkadem24@gmail.com
+          username: hamzaelmokadem
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Create Frontend Repository
@@ -98,7 +98,7 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
           -d '{"name": "ai-email-agent-frontend", "is_private": false}' \
-          https://hub.docker.com/v2/repositories/hamzaelmkadem24/
+          https://hub.docker.com/v2/repositories/hamzaelmokadem/
 
       - name: Build and Push Frontend Image
         uses: docker/build-push-action@v4
@@ -107,6 +107,6 @@ jobs:
           file: frontend/Dockerfile
           push: true
           tags: |
-            hamzaelmkadem24/ai-email-agent-frontend:latest
-            hamzaelmkadem24/ai-email-agent-frontend:${{ github.sha }}
-            ${{ github.event_name == 'release' && format('hamzaelmkadem24/ai-email-agent-frontend:{0}', github.event.release.tag_name) || '' }}
+            hamzaelmokadem/ai-email-agent-frontend:latest
+            hamzaelmokadem/ai-email-agent-frontend:${{ github.sha }}
+            ${{ github.event_name == 'release' && format('hamzaelmokadem/ai-email-agent-frontend:{0}', github.event.release.tag_name) || '' }}
