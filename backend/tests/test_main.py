@@ -73,7 +73,7 @@ async def health_check():
     return {
         "status": "healthy",
         "groq_api": "connected",
-        "version": "1.0.0"
+        "version": "1.0.1"
     }
 
 # Disable lifespan events so that failing startup events (like ChatGroq initialization) do not affect tests.
