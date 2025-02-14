@@ -55,6 +55,14 @@ jobs:
           username: hamzaelmkadem24@gmail.com
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Create Backend Repository
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
+          -d '{"name": "ai-email-agent-backend", "is_private": false}' \
+          https://hub.docker.com/v2/repositories/hamzaelmkadem24/
+
       - name: Build and Push Backend Image
         uses: docker/build-push-action@v4
         with:
@@ -83,6 +91,14 @@ jobs:
         with:
           username: hamzaelmkadem24@gmail.com
           password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Create Frontend Repository
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
+          -d '{"name": "ai-email-agent-frontend", "is_private": false}' \
+          https://hub.docker.com/v2/repositories/hamzaelmkadem24/
 
       - name: Build and Push Frontend Image
         uses: docker/build-push-action@v4
