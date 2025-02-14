@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi.testclient import TestClient
 import pytest
 import asyncio
+from unittest.mock import MagicMock
 
 from app.main import app
 from app.services.gmail_service import GmailService
@@ -52,14 +53,16 @@ GmailService.send_email = MockGmailService.send_email
 
 # Mock AI service
 class MockAIService:
-    async def interpret_command(self, command, gmail_service):
-        return {"output": f"Processed command: {command}"}
+    def __init__(self):
+        self.llm = MagicMock()
+        self.llm.ainvoke = MagicMock(return_value="test response")
 
-    async def ainvoke(self, context):
-        return {"dummy": "value"}
+    async def interpret_command(self, command: str, context: dict = None):
+        return "Mocked interpretation"
 
-def mock_ai_service_init(self, *args, **kwargs):
-    self.llm = MockAIService()
+def mock_ai_service_init(self):
+    self.llm = MagicMock()
+    self.llm.ainvoke = MagicMock(return_value="test response")
 
 AIService.__init__ = mock_ai_service_init
 AIService.interpret_command = MockAIService.interpret_command
@@ -102,4 +105,49 @@ def test_process_command():
     response = client.post("/api/emails/process-command", json=payload)
     assert response.status_code == 200
     # The expected output should match the dummy implementation.
-    assert response.json() == "Processed command: test command" 
+    assert response.json() == "Processed command: test command"
+
+# Tests
+@pytest.mark.asyncio
+async def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "version" in data
+
+@pytest.mark.asyncio
+async def test_recent_emails():
+    response = client.get("/api/v1/emails/recent", headers={"Authorization": "Bearer test_token"})
+    assert response.status_code == 200
+    emails = response.json()
+    assert len(emails) > 0
+    assert "subject" in emails[0]
+    assert "sender" in emails[0]
+
+@pytest.mark.asyncio
+async def test_send_email():
+    email_data = {
+        "to": "test@example.com",
+        "subject": "Test Subject",
+        "body": "Test Body"
+    }
+    response = client.post("/api/v1/emails/send", 
+                          json=email_data,
+                          headers={"Authorization": "Bearer test_token"})
+    assert response.status_code == 200
+    result = response.json()
+    assert "id" in result
+
+@pytest.mark.asyncio
+async def test_process_command():
+    command_data = {
+        "command": "Send an email to test@example.com",
+        "context": {"some": "context"}
+    }
+    response = client.post("/api/v1/ai/process-command",
+                          json=command_data,
+                          headers={"Authorization": "Bearer test_token"})
+    assert response.status_code == 200
+    result = response.json()
+    assert isinstance(result, str) 

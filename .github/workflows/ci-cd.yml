@@ -30,17 +30,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+          pip install pytest-asyncio httpx
 
       - name: Run Tests
         run: |
           cd backend
-          pytest tests/ -v
+          python -m pytest tests/test_main.py -v
 
-  build_and_push:
-    name: Build and Push Docker Image
+  build_and_push_backend:
+    name: Build and Push Backend Image
     runs-on: ubuntu-latest
     needs: test
-    # Run this job only on push to main or on release events (not on pull_request events)
     if: github.event_name != 'pull_request'
     steps:
       - name: Checkout Repository
@@ -55,13 +55,42 @@ jobs:
           username: hamzaelmkadem24@gmail.com
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Backend Image
         uses: docker/build-push-action@v4
         with:
-          # Build context is the repository root and uses the backend Dockerfile
           context: .
           file: backend/Dockerfile
           push: true
           tags: |
-            hamzaelmkadem24/ai-email-agent:${{ github.sha }}
-            ${{ github.event_name == 'release' && format('hamzaelmkadem24/ai-email-agent:{0}', github.event.release.tag_name) || '' }}
+            hamzaelmkadem24/ai-email-agent-backend:latest
+            hamzaelmkadem24/ai-email-agent-backend:${{ github.sha }}
+            ${{ github.event_name == 'release' && format('hamzaelmkadem24/ai-email-agent-backend:{0}', github.event.release.tag_name) || '' }}
+
+  build_and_push_frontend:
+    name: Build and Push Frontend Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: hamzaelmkadem24@gmail.com
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            hamzaelmkadem24/ai-email-agent-frontend:latest
+            hamzaelmkadem24/ai-email-agent-frontend:${{ github.sha }}
+            ${{ github.event_name == 'release' && format('hamzaelmkadem24/ai-email-agent-frontend:{0}', github.event.release.tag_name) || '' }}
