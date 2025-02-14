@@ -23,24 +23,48 @@ function LoginPage() {
         return;
       }
 
-      // Open popup window
-      const popup = window.open(
+      // Ouvrir la fenêtre de connexion Google
+      const gmailWindow = window.open(
         response.data.url,
-        'Connexion Google',
-        'width=500,height=600'
+        'gmail_auth',
+        'width=500,height=600,popup=true,noopener=false'
       );
 
-      // Listen for message from popup
-      window.addEventListener('message', (event) => {
-        if (event.data.token) {
-          setToken(event.data.token);
-          toast.success('Connexion réussie !');
-          navigate('/');
+      if (!gmailWindow) {
+        toast.error('Le popup a été bloqué. Veuillez autoriser les popups pour ce site.');
+        return;
+      }
+
+      // Vérifier périodiquement si la fenêtre est fermée
+      const checkInterval = setInterval(() => {
+        if (gmailWindow.closed) {
+          clearInterval(checkInterval);
         }
-      }, { once: true });
+      }, 500);
+
+      // Écouter le message de connexion réussie
+      const messageHandler = (event: MessageEvent) => {
+        try {
+          console.log('Message reçu:', event.data);
+          
+          if (event.data && typeof event.data === 'object' && 'token' in event.data) {
+            clearInterval(checkInterval);
+            window.removeEventListener('message', messageHandler);
+            
+            setToken(event.data.token);
+            toast.success('Connexion réussie !');
+            navigate('/');
+          }
+        } catch (error) {
+          console.error('Erreur lors du traitement du message:', error);
+          toast.error('Erreur lors de la connexion');
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
 
     } catch (error) {
-      console.error('Échec de l\'obtention de l\'URL OAuth Google:', error);
+      console.error('Échec de l\'initialisation de la connexion Google:', error);
       toast.error('Échec de l\'initialisation de la connexion Google');
     }
   };

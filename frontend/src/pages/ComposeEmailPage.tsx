@@ -94,7 +94,7 @@ function ComposeEmailPage() {
         <form onSubmit={handleSendEmail} className="space-y-6">
           <div>
             <label htmlFor="recipients" className="block text-sm font-medium text-gray-700">
-              À (emails séparés par des virgules)
+              À 
             </label>
             <input
               type="text"
@@ -102,7 +102,7 @@ function ComposeEmailPage() {
               value={recipients}
               onChange={(e) => setRecipients(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="email@exemple.com, autre@exemple.com"
+              placeholder="email@exemple.com"
               required
             />
           </div>

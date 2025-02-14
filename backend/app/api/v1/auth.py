@@ -66,16 +66,20 @@ async def auth_callback(code: str, state: str):
         access_token = create_access_token(data=token_data)
         
         return HTMLResponse(content=f"""
-        <html>
-            <script type="text/javascript">
-                window.opener.postMessage({{ 
-                    token: "{access_token}",
-                    type: "bearer"
-                }}, "*");
-                window.close();
-            </script>
-            <body>Authentication successful! You can close this window.</body>
-        </html>
+            <html>
+                <script>
+                    window.opener.postMessage({{
+                        token: "{access_token}",
+                        type: "bearer",
+                        status: "gmail_connected"
+                    }}, "*");
+                    window.close();
+                </script>
+                <body>
+                    <h2>Authentification réussie !</h2>
+                    <p>Vous pouvez fermer cette fenêtre.</p>
+                </body>
+            </html>
         """)
     except Exception as e:
         raise HTTPException(
