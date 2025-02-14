@@ -38,33 +38,30 @@ class AIService:
         )
         
     def _create_fetch_emails_tool(self, gmail_service) -> StructuredTool:
-        async def fetch_emails(limit: int) -> str:
+        async def fetch_emails(limit: int) -> Dict[str, Any]:
             emails = await gmail_service.get_recent_emails(limit)
             email_list = []
-            for i, email in enumerate(emails, 1):
+            
+            for email in emails:
                 email = email or {}
-                if 'payload' in email:
-                    headers = email.get("payload", {}).get("headers", [])
-                    subject = next(
-                        (h.get("value") for h in headers if isinstance(h, dict) and h.get("name", "").lower() == "subject"),
-                        email.get("subject", "No Subject")
-                    )
-                    sender = next(
-                        (h.get("value") for h in headers if isinstance(h, dict) and h.get("name", "").lower() == "from"),
-                        email.get("sender", "Unknown")
-                    )
-                else:
-                    subject = email.get("subject", "No Subject")
-                    sender = email.get("sender", "Unknown")
+                headers = email.get("payload", {}).get("headers", [])
+                subject = next(
+                    (h.get("value") for h in headers if isinstance(h, dict) and h.get("name", "").lower() == "subject"),
+                    email.get("subject", "No Subject")
+                )
+                sender = next(
+                    (h.get("value") for h in headers if isinstance(h, dict) and h.get("name", "").lower() == "from"),
+                    email.get("sender", "Unknown")
+                )
                 snippet = email.get("snippet", "No preview available")
                 
-                email_list.append(
-                    f"\n{i}. From: {sender}\n"
-                    f"   Subject: {subject}\n"
-                    f"   Snippet: {snippet}\n"
-                )
+                email_list.append({
+                    "from": sender,
+                    "subject": subject,
+                    "snippet": snippet
+                })
             
-            return f"Here are your {len(emails)} most recent emails:\n{''.join(email_list)}"
+            return {"emails": email_list}
             
         return StructuredTool.from_function(
             name="fetch_emails",
