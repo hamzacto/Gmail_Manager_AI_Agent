@@ -7,7 +7,7 @@ from .api.deps import get_current_user
 from typing import Dict
 from .api.v1 import auth, emails
 from langchain.prompts import ChatPromptTemplate
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -25,7 +25,14 @@ app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(emails.router, prefix=settings.API_V1_STR)
 
 class CommandRequest(BaseModel):
-    command: str
+    command: constr(min_length=1, strip_whitespace=True)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "command": "Send an email to john@example.com"
+            }
+        }
 
 # Email routes
 @app.get(f"{settings.API_V1_STR}/emails/recent")
@@ -42,19 +49,21 @@ async def process_command(
     command_req: CommandRequest = Body(...),
     current_user = Depends(get_current_user)
 ):
+    if not command_req.command.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Command cannot be empty"
+        )
+    
     try:
         ai_service = AIService()
         gmail_service = GmailService(current_user)
-        
-        # Process natural language command
         result = await ai_service.interpret_command(command_req.command, gmail_service)
         return result["output"]
-            
     except Exception as e:
-        print(e)
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=f"Failed to process command: {str(e)}"
         )
 
 @app.get("/health")

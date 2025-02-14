@@ -1,17 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from typing import List, Optional
 from ...models.email import EmailResponse, EmailCreate, DraftRequest
 from ...services.gmail_service import GmailService
 from ...services.ai_service import AIService
 from ..deps import get_current_user
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, constr
+from datetime import datetime
 
 router = APIRouter(prefix="/emails", tags=["emails"])
 
 class EmailCreate(BaseModel):
-    recipients: List[str]
-    subject: str
-    body: str
+    recipients: List[EmailStr]
+    subject: constr(min_length=1, strip_whitespace=True)
+    body: constr(min_length=1)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "recipients": ["recipient@example.com"],
+                "subject": "Meeting Tomorrow",
+                "body": "Hello, let's meet tomorrow at 10 AM."
+            }
+        }
 
 class EmailResponse(BaseModel):
     id: str
@@ -54,13 +64,22 @@ async def send_email(
     email: EmailCreate,
     current_user = Depends(get_current_user)
 ):
+    if not email.recipients:
+        raise HTTPException(
+            status_code=422,
+            detail="At least one recipient is required"
+        )
+    
     gmail_service = GmailService(current_user)
-    
-    # Send to first recipient for now (can be enhanced to support multiple recipients)
-    result = await gmail_service.send_email(
-        to=email.recipients[0],  # Using first recipient
-        subject=email.subject,
-        body=email.body
-    )
-    
-    return result 
+    try:
+        result = await gmail_service.send_email(
+            to=email.recipients[0],
+            subject=email.subject,
+            body=email.body
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send email: {str(e)}"
+        ) 
