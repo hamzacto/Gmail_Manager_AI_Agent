@@ -57,8 +57,8 @@ class MockAIService:
         self.llm = MagicMock()
         self.llm.ainvoke = MagicMock(return_value="test response")
 
-    async def interpret_command(self, command: str, context: dict = None):
-        return "Mocked interpretation"
+    async def interpret_command(self, command: str, gmail_service) -> dict:
+        return {"output": "Command processed successfully"}
 
 def mock_ai_service_init(self):
     self.llm = MagicMock()
@@ -118,21 +118,25 @@ async def test_health_check():
 
 @pytest.mark.asyncio
 async def test_recent_emails():
-    response = client.get("/api/v1/emails/recent", headers={"Authorization": "Bearer test_token"})
+    response = client.get("/api/v1/emails/recent", 
+                         headers={"Authorization": "Bearer test_token"})
     assert response.status_code == 200
     emails = response.json()
     assert len(emails) > 0
-    assert "subject" in emails[0]
-    assert "sender" in emails[0]
+    for email in emails:
+        assert "subject" in email
+        assert "snippet" in email
+        assert "date" in email
+        assert "sender" in email
 
 @pytest.mark.asyncio
 async def test_send_email():
     email_data = {
-        "to": "test@example.com",
+        "recipients": ["test@example.com"],
         "subject": "Test Subject",
         "body": "Test Body"
     }
-    response = client.post("/api/v1/emails/send", 
+    response = client.post("/api/v1/emails/send",
                           json=email_data,
                           headers={"Authorization": "Bearer test_token"})
     assert response.status_code == 200
@@ -142,10 +146,9 @@ async def test_send_email():
 @pytest.mark.asyncio
 async def test_process_command():
     command_data = {
-        "command": "Send an email to test@example.com",
-        "context": {"some": "context"}
+        "command": "Send an email to test@example.com"
     }
-    response = client.post("/api/v1/ai/process-command",
+    response = client.post("/api/emails/process-command",
                           json=command_data,
                           headers={"Authorization": "Bearer test_token"})
     assert response.status_code == 200
