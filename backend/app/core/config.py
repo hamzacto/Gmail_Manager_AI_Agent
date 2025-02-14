@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 class Settings(BaseSettings):
     # Project settings
     PROJECT_NAME: str = "AI Email Agent"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.0.1"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
     
