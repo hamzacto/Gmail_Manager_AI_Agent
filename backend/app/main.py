@@ -48,7 +48,7 @@ async def process_command(
         
         # Process natural language command
         result = await ai_service.interpret_command(command_req.command, gmail_service)
-        return result["output"]
+        return result
             
     except Exception as e:
         print(e)
