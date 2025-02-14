@@ -2,19 +2,12 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
+COPY package*.json ./
 RUN npm install
 
 # Copy the rest of the application
 COPY . .
-
-# Create lib directory and install axios
-RUN mkdir -p src/lib && \
-    npm install axios && \
-    echo "import axios from 'axios'; export default axios;" > src/lib/axios.ts
 
 # Build the application
 RUN npm run build
@@ -22,5 +15,5 @@ RUN npm run build
 # Expose port 5173 for Vite
 EXPOSE 5173
 
-# Start the application
+# Use --host 0.0.0.0 to make Vite accessible from outside the container
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 
