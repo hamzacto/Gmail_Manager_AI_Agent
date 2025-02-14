@@ -13,7 +13,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
-COPY backend/ .
+COPY . .
 
 # Create config directory
 RUN mkdir -p config
