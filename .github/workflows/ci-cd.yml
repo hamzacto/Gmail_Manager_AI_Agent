@@ -66,8 +66,8 @@ jobs:
       - name: Build and Push Backend Image
         uses: docker/build-push-action@v4
         with:
-          context: ./backend
-          file: Dockerfile
+          context: .
+          file: backend/Dockerfile
           push: true
           tags: |
             hamzaelmokadem/ai-email-agent-backend:latest
